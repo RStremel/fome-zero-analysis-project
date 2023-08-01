@@ -58,13 +58,13 @@ def country_name(country_id):
 #Criação do Tipo de Categoria de Comida
 def create_price_type(price_range):
     if price_range == 1:
-        return 'cheap'
+        return 'Cheap'
     elif price_range == 2:
-        return 'normal'
+        return 'Normal'
     elif price_range == 3:
-        return 'expensive'
+        return 'Expensive'
     else:
-        return 'gourmet'
+        return 'Gourmet'
 
 #Criação do nome das Cores
 color_dict = {
@@ -120,46 +120,32 @@ def qtde_rest_cidades(df):
                  y='restaurant_name', 
                  color='country_name', 
                  labels=dict(restaurant_name='Qtde de restaurantes',
-                             city='Cidades'))
+                             city='Cidades',
+                             country_name='País'))
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Quantidade de restaurantes: %{y}<br>')
+    fig.update_xaxes(tickangle=-90)
 
     return fig
 
 def preco_medio_dois_cidades(df):
     cols = ['city','country_name','average_cost_for_two_brl']
     df_aux = df[cols].groupby(['country_name','city']).mean().sort_values('average_cost_for_two_brl', ascending=False).reset_index()
+    df_aux['average_cost_for_two_brl'] = df_aux['average_cost_for_two_brl'].round(2)
     fig = px.bar(df_aux, 
                  x='city', 
                  y='average_cost_for_two_brl', 
                  color='country_name', 
                  labels=dict(average_cost_for_two_brl='Preço médio, em reais', 
-                             city='Cidades'))
-
-    return fig
-
-
-def top_notas_cidades(df):
-    cols = ['city','aggregate_rating']
-    df_aux = df[cols].groupby('city').mean().sort_values('aggregate_rating', ascending=False).reset_index().head(5)
-    fig = px.bar(df_aux, 
-                 x='city', 
-                 y='aggregate_rating',
-                 labels=dict(aggregate_rating='Nota média', 
-                             city='Cidades'), 
-                 text_auto=True)
-    fig.update_traces(textposition='outside')
-
-    return fig
-
-def bottom_notas_cidades(df):
-    cols = ['city','aggregate_rating']
-    df_aux = df[cols].groupby('city').mean().sort_values('aggregate_rating', ascending=True).reset_index().head(5)
-    fig = px.bar(df_aux, 
-                 x='city', 
-                 y='aggregate_rating',
-                 labels=dict(aggregate_rating='Nota média', 
-                             city='Cidades'), 
-                 text_auto=True)
-    fig.update_traces(textposition='outside')
+                             city='Cidades',
+                             country_name='País'))
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Preço médio: R$ %{y}<br>')
+    fig.update_xaxes(tickangle=-90)
 
     return fig
 
@@ -171,11 +157,51 @@ def qtde_cozinhas_cidades(df):
                  y='cuisines', 
                  color='country_name',
                  labels=dict(cuisines='Qtde de culinárias', 
-                             city='Cidades'), 
+                             city='Cidades',
+                             country_name='País'), 
                  text_auto=True)
-    fig.update_traces(textposition='outside')
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Nota média: %{y}<br>')
+    fig.update_xaxes(tickangle=-90)
 
     return fig
+
+def top_notas_cidades(df):
+    cols = ['city','aggregate_rating']
+    df_aux = df[cols].groupby('city').mean().sort_values('aggregate_rating', ascending=False).reset_index().head(5)
+    df_aux['aggregate_rating'] = df_aux['aggregate_rating'].round(2)
+    fig = px.bar(df_aux, 
+                 x='city', 
+                 y='aggregate_rating',
+                 labels=dict(aggregate_rating='Nota média', 
+                             city='Cidades'), 
+                 text_auto=True)
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Nota média: %{y}<br>')
+
+    return fig
+
+def bottom_notas_cidades(df):
+    cols = ['city','aggregate_rating']
+    df_aux = df[cols].groupby('city').mean().sort_values('aggregate_rating', ascending=True).reset_index().head(5)
+    df_aux['aggregate_rating'] = df_aux['aggregate_rating'].round(2)
+    fig = px.bar(df_aux, 
+                 x='city', 
+                 y='aggregate_rating',
+                 labels=dict(aggregate_rating='Nota média', 
+                             city='Cidades'), 
+                 text_auto=True)
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Nota média: %{y}<br>')
+
+    return fig
+
 
 # =========================================================================
 # Início da estrutura lógica do código
@@ -229,11 +255,9 @@ st.markdown(
 
 st.sidebar.image(image, width=160)
 
-st.sidebar.markdown('# Dashboard Países')
+# st.sidebar.markdown('# Dashboard Países')
 
 st.sidebar.markdown("""---""")
-
-st.sidebar.markdown('## Criado por Rodolfo Stremel')
 
 # =========================================================================
 # Filtros no Streamlit
@@ -275,6 +299,8 @@ df = df.loc[linhas_selecionadas, :]
 
 st.sidebar.markdown("""---""")
 
+st.sidebar.markdown('## Criado por Rodolfo Stremel')
+
 # =========================================================================
 # Layout no Streamlit
 # =========================================================================
@@ -296,6 +322,13 @@ with st.container():
 st.markdown("""---""")
 
 with st.container():
+    st.markdown('### Quantidade de Culinárias Distintas por Cidade')
+    st.markdown('###### A cidade com mais culinárias distintas é **Birmingham**, na Inglaterra.')
+    fig = qtde_cozinhas_cidades(df)
+    st.plotly_chart(fig, use_container_width=True)
+st.markdown("""---""")
+
+with st.container():
     col1, col2 = st.columns(2)
 
     with col1:
@@ -309,11 +342,3 @@ with st.container():
         st.markdown('###### A cidade com as piores notas médias é **Gangtok**, na Índia.')
         fig = bottom_notas_cidades(df)
         st.plotly_chart(fig, use_container_width=True)
-
-st.markdown("""---""")
-
-with st.container():
-    st.markdown('### Quantidade de Culinárias Distintas por Cidade')
-    st.markdown('###### A cidade com mais culinárias distintas é **Birmingham**, na Inglaterra.')
-    fig = qtde_cozinhas_cidades(df)
-    st.plotly_chart(fig, use_container_width=True)
