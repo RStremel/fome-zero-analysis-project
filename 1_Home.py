@@ -11,7 +11,7 @@ from PIL import Image
 from streamlit_folium import folium_static
 import inflection
 
-st.set_page_config(page_title='Dashboard Fome Zero', page_icon='🍅', layout='wide')
+st.set_page_config(page_title='Dashboard Zomato', page_icon='🍅', layout='wide')
 
 # =========================================================================
 # Funções
@@ -58,13 +58,13 @@ def country_name(country_id):
 #Criação do Tipo de Categoria de Comida
 def create_price_type(price_range):
     if price_range == 1:
-        return 'cheap'
+        return 'Cheap'
     elif price_range == 2:
-        return 'normal'
+        return 'Normal'
     elif price_range == 3:
-        return 'expensive'
+        return 'Expensive'
     else:
-        return 'gourmet'
+        return 'Gourmet'
 
 #Criação do nome das Cores
 color_dict = {
@@ -139,7 +139,7 @@ df = df.drop([356,0]).reset_index(drop=True)
 # Header no Streamlit
 # =========================================================================
 
-st.title('🍅 Dashboard Fome Zero')
+st.title('🍅 Dashboard Zomato')
 
 # =========================================================================
 # Sidebar no Streamlit
@@ -164,8 +164,22 @@ st.markdown(
 
 st.sidebar.image(image, width=160)
 
-st.sidebar.markdown('# Dashboard Fome Zero')
-# st.sidebar.markdown('## An Indian food delivery company')
+st.sidebar.markdown("""---""")
+
+# Criando um arquivo com os dados tratados
+@st.cache_data
+def convert_df(df):
+    # IMPORTANT: Cache the conversion to prevent computation on every rerun
+    return df.to_csv().encode('utf-8')
+
+dados_tratados = convert_df(df)
+
+st.sidebar.download_button(
+    label="Download dataset tratado como .csv",
+    data=dados_tratados,
+    file_name='zomato_tratado.csv',
+    mime='text/csv')
+
 st.sidebar.markdown("""---""")
 
 st.sidebar.markdown('## Criado por Rodolfo Stremel')
@@ -179,6 +193,12 @@ st.sidebar.markdown('## Criado por Rodolfo Stremel')
 # =========================================================================
 # Layout no Streamlit
 # =========================================================================
+
+st.write('Olá! Esse é um dashboard baseado no dataset da Zomato Restaurants, coletado do site [Kaggle](https://www.kaggle.com/datasets/akashram/zomato-restaurants-autoupdated-dataset?resource=download&select=zomato.csv) que, por sua vez, foi coletado atráves da Zomato API Analysis. As análises desse projetos apresentam restaurantes e culinárias pelo mundo, categorizados pelos países e cidades que constam no dataset.')
+
+st.write('Abaixo você encontra alguns dados gerais sobre o conteúdo dessa base de dados e na sequência, informações sobre o que você encontrará em cada uma das páginas desenvolvidas.')
+
+st.write('💡 Dica: utilize os filtros que aparecerão no menu lateral para personalizar as consultas em cada visão.')
 
 with st.container():
     st.markdown('### Métricas Gerais')
@@ -203,6 +223,32 @@ with st.container():
     with col5:
         total_aval = df['votes'].sum()
         col5.metric(label='Total de avaliações', value=f'{total_aval:,}'.replace(",", "."))
-        
-st.markdown("""---""")
-    
+
+st.markdown(
+"""
+### Conteúdo das páginas:
+
+**Visão Países**
+ * Quantidade de Restaurantes por País
+ * Quantidade de Culinárias Distintas por País
+ * Preço Médio para Dois por País, em Reais
+ * Distribuição de Categorias de Preço por País
+ * Os Países com as Melhores e Piores Notas Médias
+
+**Visão Cidades**
+ * Quantidade de Restaurantes por Cidade
+ * Preço Médio para Dois por Cidade, em Reais
+ * Quantidade de Culinárias Distintas por Cidade
+ * As Cidades com as Melhores e Piores Notas Médias
+
+**Visão Culinária**
+ * Tipos de Culinária Mais Comuns
+ * As Culinárias com as Melhores e Piores Notas Médias
+ * As Culinárias com os Maiores e Menores Preços Médios para Dois, em Reais
+
+ **Visão Restaurantes**
+ * Os 10 Restaurantes com Mais Avaliações
+ * Os Restaurantes com os Maiores e Menores Preços Médios para Dois, em Reais
+ 
+"""
+)
