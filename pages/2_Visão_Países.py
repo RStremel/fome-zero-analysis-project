@@ -58,13 +58,13 @@ def country_name(country_id):
 #Criação do Tipo de Categoria de Comida
 def create_price_type(price_range):
     if price_range == 1:
-        return 'cheap'
+        return 'Cheap'
     elif price_range == 2:
-        return 'normal'
+        return 'Normal'
     elif price_range == 3:
-        return 'expensive'
+        return 'Expensive'
     else:
-        return 'gourmet'
+        return 'Gourmet'
 
 #Criação do nome das Cores
 color_dict = {
@@ -121,7 +121,10 @@ def qtde_rest_paises(df):
                  labels=dict(restaurant_name='Qtde de restaurantes', 
                              country_name='Países'), 
                  text_auto=True)
-    fig.update_traces(textposition='outside')
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Quantidade de restaurantes: %{y}<br>')
 
     return fig
 
@@ -134,20 +137,27 @@ def qtde_cozinhas_paises(df):
                  labels=dict(cuisines='Qtde de culinárias', 
                              country_name='Países'), 
                  text_auto=True)
-    fig.update_traces(textposition='outside')
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Quantidade de culinárias: %{y}<br>')
 
     return fig
 
 def preco_medio_dois_paises(df):
     cols = ['country_name','average_cost_for_two_brl']
     df_aux = df[cols].groupby('country_name').mean().sort_values('average_cost_for_two_brl', ascending=False).reset_index()
+    df_aux['average_cost_for_two_brl'] = df_aux['average_cost_for_two_brl'].round(2)
     fig = px.bar(df_aux, 
                  x='country_name', 
                  y='average_cost_for_two_brl',
                  labels=dict(average_cost_for_two_brl='Preço médio, em reais', 
                              country_name='Países'), 
                  text_auto=True)
-    fig.update_traces(textposition='outside')
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Preço médio: R$ %{y}<br>')
 
     return fig
 
@@ -162,32 +172,42 @@ def categoria_preco_paises(df):
                       color_continuous_scale='magma',
                       width=800, 
                       height=800)
+    fig.update_traces(hovertemplate='<b>%{label}</b>'+
+                      '<br>Quantidade de restaurantes: %{value}<br>')
 
     return fig
 
 def top_notas_paises(df):
     cols = ['country_name','aggregate_rating']
     df_aux = df[cols].groupby('country_name').mean().sort_values('aggregate_rating', ascending=False).reset_index().head(5)
+    df_aux['aggregate_rating'] = df_aux['aggregate_rating'].round(2)
     fig = px.bar(df_aux, 
                  x='country_name', 
                  y='aggregate_rating',
                  labels=dict(aggregate_rating='Nota média', 
                              country_name='Países'), 
                  text_auto=True)
-    fig.update_traces(textposition='outside')
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Nota média: %{y}<br>')
 
     return fig
 
 def bottom_notas_paises(df):
     cols = ['country_name','aggregate_rating']
     df_aux = df[cols].groupby('country_name').mean().sort_values('aggregate_rating', ascending=True).reset_index().head(5)
+    df_aux['aggregate_rating'] = df_aux['aggregate_rating'].round(2)
     fig = px.bar(df_aux, 
                  x='country_name', 
                  y='aggregate_rating',
                  labels=dict(aggregate_rating='Nota média', 
                              country_name='Países'), 
                  text_auto=True)
-    fig.update_traces(textposition='outside')
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Nota média: %{y}<br>')
 
     return fig
 
@@ -197,6 +217,7 @@ def bottom_notas_paises(df):
 
 #carregando dataset
 csv_path = 'files/dataset/zomato.csv'
+
 df = pd.read_csv(csv_path)
 
 df = code_cleaning(df)
@@ -243,7 +264,7 @@ st.markdown(
 
 st.sidebar.image(image, width=160)
 
-st.sidebar.markdown('# Dashboard Países')
+# st.sidebar.markdown('# Dashboard Países')
 
 st.sidebar.markdown("""---""")
 
@@ -307,7 +328,7 @@ with st.container():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('### Os Países com as Melhors Notas Médias')
+        st.markdown('### Os Países com as Melhores Notas Médias')
         st.markdown('###### O país com a melhor nota média é a **Indonésia**.')
         fig = top_notas_paises(df)
         st.plotly_chart(fig, use_container_width=True)
@@ -317,6 +338,7 @@ with st.container():
         st.markdown('###### O país com a pior nota média é o **Brasil**.')
         fig = bottom_notas_paises(df)
         st.plotly_chart(fig, use_container_width=True)
+            
 
 
 #bubble chart com x=nota media e y=custo medio
