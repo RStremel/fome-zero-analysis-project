@@ -11,7 +11,7 @@ from PIL import Image
 from streamlit_folium import folium_static
 import inflection
 
-st.set_page_config(page_title='Dashboard Culinárias', page_icon='👨‍🍳', layout='wide')
+st.set_page_config(page_title='Dashboard Restaurantes', page_icon='🍽️', layout='wide')
 
 # =========================================================================
 # Funções
@@ -58,13 +58,13 @@ def country_name(country_id):
 #Criação do Tipo de Categoria de Comida
 def create_price_type(price_range):
     if price_range == 1:
-        return 'cheap'
+        return 'Cheap'
     elif price_range == 2:
-        return 'normal'
+        return 'Normal'
     elif price_range == 3:
-        return 'expensive'
+        return 'Expensive'
     else:
-        return 'gourmet'
+        return 'Gourmet'
 
 #Criação do nome das Cores
 color_dict = {
@@ -112,68 +112,66 @@ currency_to_BRL = {
 def convert_to_BRL(average_cost_for_two):
     return currency_to_BRL[average_cost_for_two]
 
-def cozinhas_mais_comuns(df):
-    cols = ['restaurant_id','cuisines']
-    df_aux = df[cols].groupby('cuisines').count().sort_values('restaurant_id', ascending=False).reset_index().head(10)
+def rest_mais_avaliados(df):
+    cols = ['restaurant_name','country_name','city','votes']
+    df_aux = df[cols].sort_values('votes', ascending=False).reset_index(drop=True).head(10)
     fig = px.bar(df_aux, 
-                 x='cuisines', 
-                 y='restaurant_id',
-                 labels=dict(restaurant_id='Qtde de restaurantes', 
-                             cuisines='Culinárias'), 
-                 text_auto=True)
-    fig.update_traces(textposition='outside')
+                 x='restaurant_name', 
+                 y='votes',
+                 labels=dict(votes='Qtde de votos', 
+                             restaurant_name='Restaurantes',
+                             country_name='País',
+                             city='Cidade'), 
+                 text_auto=True,
+                 custom_data=np.stack((df_aux['city'], df_aux['country_name'])),
+                 height=600)
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{label}</b>'+
+                      '<br>Quantidade de avaliações: %{y}'+
+                      '<br>Cidade: %{customdata[0]}'+
+                      '<br>País: %{customdata[1]}')
+    fig.update_xaxes(tickangle=-45)
 
     return fig
 
-def top_notas_cozinhas(df):
-    cols = ['cuisines','aggregate_rating']
-    df_aux = df[cols].groupby('cuisines').mean().sort_values('aggregate_rating', ascending=False).reset_index().head(5)
+def top_preco_medio_dois_rest(df):
+    cols = ['restaurant_name','average_cost_for_two_brl']
+    df_aux = df[cols].groupby(['restaurant_name']).mean().sort_values('average_cost_for_two_brl', ascending=False).reset_index().head(5)
+    df_aux['average_cost_for_two_brl'] = df_aux['average_cost_for_two_brl'].round(2)
     fig = px.bar(df_aux, 
-                 x='cuisines', 
-                 y='aggregate_rating',
-                 labels=dict(aggregate_rating='Nota média', 
-                             cuisines='Culinárias'), 
-                 text_auto=True)
-    fig.update_traces(textposition='outside')
-
-    return fig
-
-def bottom_notas_cozinhas(df):
-    cols = ['cuisines','aggregate_rating']
-    df_aux = df[cols].groupby('cuisines').mean().sort_values('aggregate_rating', ascending=True).reset_index().head(5)
-    fig = px.bar(df_aux, 
-                 x='cuisines', 
-                 y='aggregate_rating',
-                 labels=dict(aggregate_rating='Nota média', 
-                             cuisines='Culinárias'), 
-                 text_auto=True)
-    fig.update_traces(textposition='outside')
-
-    return fig
-
-def top_preco_medio_dois_cozinhas(df):
-    cols = ['cuisines','average_cost_for_two_brl']
-    df_aux = df[cols].groupby(['cuisines']).mean().sort_values('average_cost_for_two_brl', ascending=False).reset_index().head(5)
-    fig = px.bar(df_aux, 
-                 x='cuisines', 
+                 x='restaurant_name',
                  y='average_cost_for_two_brl',
                  labels=dict(average_cost_for_two_brl='Preço médio, em reais', 
-                             cuisines='Culinárias'), 
-                 text_auto=True)
-    fig.update_traces(textposition='outside')
+                             restaurant_name='Restaurantes'), 
+                 text_auto=True,
+                 height=500)
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Preço médio: R$ %{y}<br>')
+    fig.update_xaxes(tickangle=-45)
 
     return fig
 
-def bottom_preco_medio_dois_cozinhas(df):
-    cols = ['cuisines','average_cost_for_two_brl']
-    df_aux = df[cols].groupby(['cuisines']).mean().sort_values('average_cost_for_two_brl', ascending=True).reset_index().head(5)
+def bottom_preco_medio_dois_rest(df):
+    cols = ['restaurant_name','average_cost_for_two_brl']
+
+    df_aux = df[cols].groupby(['restaurant_name']).mean().sort_values('average_cost_for_two_brl', ascending=True).reset_index()
+    df_aux = df_aux[df_aux['average_cost_for_two_brl'] != 0].reset_index(drop=True).head(5)
+    df_aux['average_cost_for_two_brl'] = df_aux['average_cost_for_two_brl'].round(2)
     fig = px.bar(df_aux, 
-                 x='cuisines', 
+                 x='restaurant_name', 
                  y='average_cost_for_two_brl',
                  labels=dict(average_cost_for_two_brl='Preço médio, em reais', 
-                             cuisines='Culinárias'), 
-                 text_auto=True)
-    fig.update_traces(textposition='outside')
+                             restaurant_name='Restaurantes'), 
+                 text_auto=True,
+                 height=540)
+    fig.update_traces(textposition='outside',
+                      hovertemplate=
+                      '<b>%{x}</b>'+
+                      '<br>Preço médio: R$ %{y}<br>')
+    fig.update_xaxes(tickangle=-45)
 
     return fig
 
@@ -204,7 +202,7 @@ df = df.drop([356,0]).reset_index(drop=True)
 # Header no Streamlit
 # =========================================================================
 
-st.title('👨‍🍳 Dashboard Culinárias')
+st.title('🍽️ Dashboard Restaurantes')
 
 # =========================================================================
 # Sidebar no Streamlit
@@ -229,7 +227,7 @@ st.markdown(
 
 st.sidebar.image(image, width=160)
 
-st.sidebar.markdown('# Dashboard Culinárias')
+# st.sidebar.markdown('# Dashboard Restaurantes')
 
 st.sidebar.markdown("""---""")
 
@@ -237,17 +235,53 @@ st.sidebar.markdown("""---""")
 # Filtros no Streamlit
 # =========================================================================
 
-cuisines_list = df[['restaurant_id',
-                    'cuisines']].groupby('cuisines').count().sort_values('restaurant_id', 
-                                                                         ascending=False).reset_index().head(10)['cuisines']
+country_list = ['Philippines', 'Brazil', 'Australia', 'United States of America', 'Canada',
+                'Singapure', 'United Arab Emirates', 'India', 'Indonesia', 'New Zeland',
+                'England', 'Qatar', 'South Africa', 'Sri Lanka', 'Turkey']
 
-cuisines_selection = st.sidebar.multiselect(
-    label='Selecione as culinárias:',
-    options=df['cuisines'].unique(),
-    default=cuisines_list
+country_selection = st.sidebar.multiselect(
+    label='Selecione os países:',
+    options=country_list,
+    default=country_list
 )
 
-linhas_selecionadas = df['cuisines'].isin(cuisines_list)
+linhas_selecionadas = df['country_name'].isin(country_selection)
+df = df.loc[linhas_selecionadas, :]
+
+st.sidebar.markdown("""---""")
+
+#Input de preço médio
+avg_price_input_min = st.sidebar.number_input(
+    'Selecione o preço médio **mínimo** para dois, em reais:',
+    min_value=df['average_cost_for_two_brl'].min(),
+    max_value=df['average_cost_for_two_brl'].max(),
+    value=df['average_cost_for_two_brl'].min(),
+    step=1.0
+)
+
+avg_price_input_max = st.sidebar.number_input(
+    'Selecione o preço médio **máximo** para dois, em reais:',
+    min_value=df['average_cost_for_two_brl'].min(),
+    max_value=df['average_cost_for_two_brl'].max(),
+    value=df['average_cost_for_two_brl'].max(),
+    step=1.0
+)
+
+linhas_selecionadas = df['average_cost_for_two_brl'].between(avg_price_input_min, avg_price_input_max)
+df = df.loc[linhas_selecionadas, :]
+
+st.sidebar.markdown("""---""")
+
+#Slider de nota média
+rating_slider = st.sidebar.slider(
+    'Selecione a faixa de avaliação média:',
+    float(df['aggregate_rating'].min()), 
+    float(df['aggregate_rating'].max()), 
+    (float(df['aggregate_rating'].min()), float(df['aggregate_rating'].max())),
+    step=0.1
+)
+
+linhas_selecionadas = df['aggregate_rating'].between(rating_slider[0], rating_slider[1])
 df = df.loc[linhas_selecionadas, :]
 
 st.sidebar.markdown("""---""")
@@ -259,41 +293,24 @@ st.sidebar.markdown('## Criado por Rodolfo Stremel')
 # =========================================================================
 
 with st.container():
-    st.markdown('### Tipos de Culinária Mais Comuns')
-    st.markdown('###### A culinária mais comum é a **Indiana**.')
-    fig = cozinhas_mais_comuns(df)
+    st.markdown('### Os 10 Restaurantes com Mais Avaliações')
+    st.markdown('###### O restaurante com mais avaliações é o **Bawarchi**.')
+    fig = rest_mais_avaliados(df)
     st.plotly_chart(fig, use_container_width=True)
     
 st.markdown("""---""")
-    
-with st.container():
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown('### As Culinárias com as Melhores Notas Médias')
-        st.markdown('###### A culinária com a melhor nota média é a **Americana**.')
-        fig = top_notas_cozinhas(df)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col2:
-        st.markdown('### As Culinárias com as Piores Notas Médias')
-        st.markdown('###### A culinária com a pior nota média é o **Fast Food**.')
-        fig = bottom_notas_cozinhas(df)
-        st.plotly_chart(fig, use_container_width=True)
-    
-st.markdown("""---""")
 
 with st.container():
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('### As Culinárias com os Maiores Preços Médios para Dois, em Reais')
-        st.markdown('###### A culinária com o maior preço médio é a de **Frutos do Mar**.')
-        fig = top_preco_medio_dois_cozinhas(df)
+        st.markdown('### Os Restaurantes com os Maiores Preços Médios para Dois, em Reais')
+        st.markdown('###### O restaurante com o maior preço médio é o **Eleven Madison Park**.')
+        fig = top_preco_medio_dois_rest(df)
         st.plotly_chart(fig, use_container_width=True)
 
     with col2:
-        st.markdown('### As Culinárias com os Menores Preços Médios para Dois, em Reais')
-        st.markdown('###### A culinária com o menor preço médio é o **Fast Food**.')
-        fig = bottom_preco_medio_dois_cozinhas(df)
+        st.markdown('### Os Restaurantes com os Menores Preços Médios para Dois, em Reais')
+        st.markdown('###### O restaurante com o menor preço médio é o **Shankar Samosa**.')
+        fig = bottom_preco_medio_dois_rest(df)
         st.plotly_chart(fig, use_container_width=True)
